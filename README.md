@@ -60,9 +60,11 @@ Records (W-L-D) always update.
 
 ## Saving
 
-On quit the league is saved to `data/league.json` and loaded again next run.
-If that file is missing or broken, the program tells you and starts from
-`data/seed.json` (the shipped rankings). Delete `data/league.json` to reset.
+All data lives in one file, `data/seed.json`. The program loads it when it
+starts and saves it back when you `quit`, so results you record are still there
+next run. If the file is missing or broken, the program tells you, starts
+empty, and does not overwrite the file. To reset to the original rankings, run
+`git checkout data/seed.json`.
 
 ## Project layout
 
@@ -74,7 +76,7 @@ ufc_league/
   storage.py         JSON save/load (pathlib) + open_league context manager
   utils.py           handle_errors decorator
   cli.py             terminal questions and answers
-data/seed.json       starting rankings
+data/seed.json       the rankings (loaded and saved here)
 tests/               pytest tests
 ```
 
