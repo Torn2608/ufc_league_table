@@ -1,12 +1,12 @@
 import pytest
 
 from ufc_league.cli import respond
-from ufc_league.storage import SEED_FILE, load_league
+from ufc_league.storage import DATA_FILE, load_league
 
 
 @pytest.fixture
-def league(tmp_path):
-    return load_league(tmp_path / "none.json", SEED_FILE)
+def league():
+    return load_league(DATA_FILE)
 
 
 def test_who_is_number_one(league):

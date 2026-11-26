@@ -5,6 +5,3 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
-# Your saved league (created on first run); the shipped seed.json stays tracked.
-data/league.json
-data/*.tmp

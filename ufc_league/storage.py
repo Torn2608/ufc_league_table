@@ -12,8 +12,7 @@ from ufc_league.league import League
 from ufc_league.models import Fight, Fighter, LeagueError
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-SEED_FILE = DATA_DIR / "seed.json"
-SAVE_FILE = DATA_DIR / "league.json"
+DATA_FILE = DATA_DIR / "seed.json"
 
 
 class StorageError(Exception):
@@ -65,38 +64,33 @@ def write_league(league: League, path: Path) -> None:
         raise StorageError(f"could not save {path.name} ({exc.strerror})") from exc
 
 
-def load_league(save_path: Path = SAVE_FILE, seed_path: Path = SEED_FILE) -> League:
-    """Load the saved league, or the starting rankings if there is none.
+def load_league(path: Path = DATA_FILE) -> League:
+    """Load the league from ``path``.
 
-    Problems never raise: they are added to ``league.notices`` instead.
+    A missing or broken file never raises: the league is empty and the reason
+    is added to ``league.notices``.
     """
-    notices: list[str] = []
-    league = None
-    if save_path.exists():
-        try:
-            league = read_league(save_path)
-        except StorageError as exc:
-            notices.append(f"Saved league ignored: {exc}. Using the starting rankings.")
-    if league is None:
-        try:
-            league = read_league(seed_path)
-        except StorageError as exc:
-            notices.append(f"Starting rankings unavailable: {exc}. Starting empty.")
-            league = League()
-    league.notices = notices
+    try:
+        league = read_league(path)
+    except StorageError as exc:
+        league = League()
+        league.notices.append(f"Could not load the rankings: {exc}.")
     return league
 
 
 @contextmanager
-def open_league(
-    save_path: Path = SAVE_FILE, seed_path: Path = SEED_FILE
-) -> Iterator[League]:
-    """Load the league, hand it over, and always save it when the block ends."""
-    league = load_league(save_path, seed_path)
+def open_league(path: Path = DATA_FILE) -> Iterator[League]:
+    """Load the league, hand it over, and save it when the block ends.
+
+    If the file could not be loaded it is left alone, so a broken file is
+    never overwritten by an empty league.
+    """
+    league = load_league(path)
     try:
         yield league
     finally:
-        try:
-            write_league(league, save_path)
-        except StorageError as exc:
-            print(f"Warning: {exc}", file=sys.stderr)
+        if not league.notices:
+            try:
+                write_league(league, path)
+            except StorageError as exc:
+                print(f"Warning: {exc}", file=sys.stderr)
